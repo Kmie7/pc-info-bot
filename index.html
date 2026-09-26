@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PC Info & Tech Assistant Bot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Gaming background ── */
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      background-color: #050810;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,255,170,0.04) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,255,170,0.04) 40px),
+        radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0,255,170,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 70%, rgba(157,0,255,0.09) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 10%, rgba(0,170,255,0.06) 0%, transparent 50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* ── Chat wrapper ── */
+    .chat-wrapper {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      height: 92vh;
+      max-height: 860px;
+      background: #0d1117;
+      border-radius: 16px;
+      border: 1px solid rgba(0,255,170,0.25);
+      box-shadow:
+        0 0 0 1px rgba(0,255,170,0.08),
+        0 0 30px rgba(0,255,170,0.08),
+        0 0 80px rgba(157,0,255,0.06),
+        0 24px 60px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .chat-header {
+      background: linear-gradient(135deg, #0d1f14 0%, #0a0f1e 100%);
+      border-bottom: 1px solid rgba(0,255,170,0.2);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #00ffaa, #9d00ff, #00aaff, transparent);
+    }
+    .bot-avatar {
+      width: 42px; height: 42px;
+      background: #0d1f14;
+      border: 1.5px solid #00ffaa;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(0,255,170,0.4);
+    }
+    .bot-avatar svg { width: 26px; height: 26px; }
+    .header-text h1 {
+      font-size: 15px; font-weight: 700; line-height: 1.2;
+      color: #00ffaa;
+      letter-spacing: 0.3px;
+    }
+    .header-text p { font-size: 12px; color: #7eeac4; margin-top: 2px; }
+    .status-dot {
+      width: 9px; height: 9px;
+      background: #00ffaa;
+      border-radius: 50%;
+      margin-left: auto;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px #00ffaa;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 6px #00ffaa; }
+      50% { box-shadow: 0 0 14px #00ffaa, 0 0 24px rgba(0,255,170,0.4); }
+    }
+
+    /* ── Messages area ── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: rgba(0,255,170,0.2); border-radius: 4px; }
+
+    /* ── Bubbles ── */
+    .msg { display: flex; align-items: flex-end; gap: 8px; max-width: 88%; }
+    .msg.bot { align-self: flex-start; }
+    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .msg.bot .msg-avatar {
+      background: #0d1f14;
+      border: 1px solid rgba(0,255,170,0.3);
+      color: #00ffaa;
+    }
+    .msg.user .msg-avatar {
+      background: #130d1f;
+      border: 1px solid rgba(157,0,255,0.3);
+      color: #c87aff;
+    }
+
+    .bubble {
+      padding: 11px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.65;
+      max-width: 100%;
+    }
+    .msg.bot .bubble {
+      background: #111820;
+      color: #c9d8e8;
+      border: 1px solid rgba(0,255,170,0.12);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 0 20px rgba(0,255,170,0.04);
+    }
+    .msg.user .bubble {
+      background: linear-gradient(135deg, #1a0a2e 0%, #2a0d4a 100%);
+      color: #e8d4ff;
+      border: 1px solid rgba(157,0,255,0.3);
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 0 20px rgba(157,0,255,0.1);
+    }
+    .bubble ul { padding-left: 18px; margin-top: 6px; }
+    .bubble li { margin-bottom: 4px; }
+    .bubble code {
+      background: #0a1a12;
+      color: #00ffaa;
+      border: 1px solid rgba(0,255,170,0.2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      font-family: "Cascadia Code", "Courier New", monospace;
+    }
+    .msg.user .bubble code {
+      background: rgba(157,0,255,0.15);
+      color: #c87aff;
+      border-color: rgba(157,0,255,0.25);
+    }
+    .bubble .step-title {
+      font-weight: 600; margin-top: 10px; display: block;
+      color: #00ffaa;
+      font-size: 12.5px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .bubble strong { color: #7eeac4; }
+    .bubble em { color: #94a3b8; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      background: rgba(255,200,0,0.12);
+      color: #ffd600;
+      border: 1px solid rgba(255,200,0,0.25);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-bottom: 6px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .badge.red {
+      background: rgba(255,50,50,0.1);
+      color: #ff6b6b;
+      border-color: rgba(255,50,50,0.25);
+    }
+    .badge.green {
+      background: rgba(0,255,170,0.08);
+      color: #00ffaa;
+      border-color: rgba(0,255,170,0.25);
+    }
+
+    /* ── Typing indicator ── */
+    .typing-indicator {
+      display: flex; gap: 5px; align-items: center; padding: 4px 2px;
+    }
+    .typing-indicator span {
+      width: 7px; height: 7px;
+      background: #00ffaa;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+      box-shadow: 0 0 6px rgba(0,255,170,0.5);
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; background: #9d00ff; box-shadow: 0 0 6px rgba(157,0,255,0.5); }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; background: #00aaff; box-shadow: 0 0 6px rgba(0,170,255,0.5); }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ── Quick replies ── */
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px 0 2px 0;
+    }
+    .qr-btn {
+      background: transparent;
+      border: 1px solid rgba(0,255,170,0.35);
+      color: #00ffaa;
+      padding: 6px 13px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+      font-family: inherit;
+      letter-spacing: 0.2px;
+    }
+    .qr-btn:hover {
+      background: rgba(0,255,170,0.1);
+      box-shadow: 0 0 10px rgba(0,255,170,0.2);
+      color: #00ffaa;
+    }
+
+    /* ── Input bar ── */
+    .input-bar {
+      display: flex;
+      gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid rgba(0,255,170,0.12);
+      flex-shrink: 0;
+      background: #0a0f18;
+    }
+    .input-bar input {
+      flex: 1;
+      background: #0d1520;
+      border: 1px solid rgba(0,255,170,0.2);
+      border-radius: 24px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      color: #c9d8e8;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input-bar input:focus {
+      border-color: rgba(0,255,170,0.5);
+      box-shadow: 0 0 12px rgba(0,255,170,0.1);
+    }
+    .input-bar input::placeholder { color: #3a5060; }
+    .send-btn {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, #00cc88, #00ffaa);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: box-shadow 0.15s, transform 0.1s;
+      box-shadow: 0 0 14px rgba(0,255,170,0.35);
+    }
+    .send-btn:hover {
+      box-shadow: 0 0 22px rgba(0,255,170,0.55);
+      transform: scale(1.05);
+    }
+    .send-btn svg { width: 18px; height: 18px; fill: #050810; }
+    .send-btn:disabled {
+      background: #1a2230;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Scan button ── */
+    .scan-bar {
+      padding: 10px 16px 0;
+      display: flex;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #0d1117;
+      border-bottom: 1px solid rgba(0,255,170,0.07);
+    }
+    .scan-btn {
+      background: transparent;
+      border: 1px solid rgba(0,255,170,0.4);
+      color: #00ffaa;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+    .scan-btn:hover {
+      background: rgba(0,255,170,0.08);
+      box-shadow: 0 0 16px rgba(0,255,170,0.25);
+    }
+    .scan-btn:disabled {
+      color: #2a4040;
+      border-color: rgba(0,255,170,0.1);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* ── Spec card ── */
+    .spec-card {
+      background: #0a1520;
+      border: 1px solid rgba(0,255,170,0.15);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 8px;
+      font-size: 13px;
+      box-shadow: 0 0 20px rgba(0,255,170,0.05);
+    }
+    .spec-card table { width: 100%; border-collapse: collapse; }
+    .spec-card td { padding: 5px 6px; vertical-align: top; }
+    .spec-card td:first-child {
+      color: #00ffaa;
+      white-space: nowrap;
+      width: 90px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .spec-card td:last-child { color: #c9d8e8; }
+    .spec-card .disk-row { margin-top: 6px; color: #94a3b8; }
+    .spec-card .disk-bar-bg {
+      background: #0d1f14;
+      border: 1px solid rgba(0,255,170,0.1);
+      border-radius: 6px;
+      height: 8px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+    .spec-card .disk-bar-fill {
+      background: linear-gradient(90deg, #00cc88, #00ffaa);
+      border-radius: 6px;
+      height: 8px;
+      box-shadow: 0 0 6px rgba(0,255,170,0.4);
+    }
+  </style>
+</head>
+<body>
+<div class="chat-wrapper">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="bot-avatar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="3" width="20" height="14" rx="2" stroke="#00ffaa" stroke-width="2"/>
+        <path d="M8 21h8M12 17v4" stroke="#00ffaa" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="8.5" cy="9.5" r="1.5" fill="#00ffaa"/>
+        <circle cx="15.5" cy="9.5" r="1.5" fill="#00ffaa"/>
+        <path d="M9 13s1 1.5 3 1.5 3-1.5 3-1.5" stroke="#00ffaa" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>PC Info &amp; Tech Assistant Bot</h1>
+      <p>Helping you check specs &amp; understand your PC</p>
+    </div>
+    <div class="status-dot" title="Online"></div>
+  </div>
+
+  <!-- Scan bar -->
+  <div class="scan-bar">
+    <button class="scan-btn" id="scanBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Scan My PC Specs
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages"></div>
+
+  <!-- Input bar -->
+  <div class="input-bar">
+    <input id="userInput" type="text" placeholder="Ask about your PC specs…" autocomplete="off" />
+    <button class="send-btn" id="sendBtn" title="Send">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────────────────
+  let failedAttempts = 0;
+  let pendingOS = null;
+  let pendingComponent = null;
+
+  // ─── DOM ─────────────────────────────────────────────────────────────────────
+  const messagesEl = document.getElementById('messages');
+  const userInput  = document.getElementById('userInput');
+  const sendBtn    = document.getElementById('sendBtn');
+  const scanBtn    = document.getElementById('scanBtn');
+
+  // ─── Scan My PC ──────────────────────────────────────────────────────────────
+  async function fetchPCSpecs() {
+    scanBtn.disabled = true;
+    scanBtn.textContent = 'Scanning…';
+    addMessage('user', '🔍 Scan my PC specs automatically');
+    addTyping();
+    try {
+      const res = await fetch('http://localhost:3000/api/specs', { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const s = await res.json();
+      removeTyping();
+      addMessage('bot', buildSpecCard(s));
+    } catch (err) {
+      removeTyping();
+      const isConn = err.name === 'TypeError' || err.name === 'AbortError' || err.message.includes('fetch');
+      addMessage('bot', isConn
+        ? `<span class="badge red">Server Not Running</span>
+           Saya tak dapat sambung ke local server. Sila pastikan server dah dijalankan:<br><br>
+           <code>cd pc-info-bot</code><br>
+           <code>node server.js</code><br><br>
+           Lepas tu cuba klik <strong>Scan My PC Specs</strong> semula.`
+        : `<span class="badge red">Error</span> ${escapeHtml(err.message)}`
+      );
+    }
+    scanBtn.disabled = false;
+    scanBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Scan My PC Specs';
+    scrollBottom();
+  }
+
+  function buildSpecCard(s) {
+    const gpuList = (s.gpu || []).map(g => '<div>' + escapeHtml(g) + '</div>').join('');
+    const diskRows = (s.disks || []).map(d => {
+      const totalGB = parseInt(d.total);
+      const usedGB  = parseInt(d.used);
+      const pct     = totalGB > 0 ? Math.min(100, Math.round((usedGB / totalGB) * 100)) : 0;
+      return '<div class="disk-row">'
+        + '<strong>' + escapeHtml(d.drive) + '</strong> — '
+        + escapeHtml(d.used) + ' used / ' + escapeHtml(d.total) + ' total (' + escapeHtml(d.free) + ' free)'
+        + '<div class="disk-bar-bg"><div class="disk-bar-fill" style="width:' + pct + '%"></div></div>'
+        + '</div>';
+    }).join('');
+
+    return '<span class="badge green">✅ PC Specs Detected</span>'
+      + '<div class="spec-card"><table>'
+      + '<tr><td>OS</td><td>'  + escapeHtml(s.os  || 'Unknown') + '</td></tr>'
+      + '<tr><td>CPU</td><td>' + escapeHtml(s.cpu || 'Unknown') + '</td></tr>'
+      + '<tr><td>RAM</td><td>' + escapeHtml(s.ram || 'Unknown') + '</td></tr>'
+      + '<tr><td>GPU</td><td>' + (gpuList || 'Unknown') + '</td></tr>'
+      + '</table>'
+      + (diskRows ? '<div style="margin-top:10px;font-weight:600;color:#64748b;font-size:12px;">STORAGE</div>' + diskRows : '')
+      + '</div>'
+      + 'Want me to explain any of these specs or guide you on checking them manually?';
+  }
+
+  scanBtn.addEventListener('click', fetchPCSpecs);
+
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+  function scrollBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function addMessage(role, html, extras) {
+    const wrap = document.createElement('div');
+    wrap.className = `msg ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    avatar.textContent = role === 'bot' ? '🖥' : 'You';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = html;
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+
+    // Quick reply buttons
+    if (extras && extras.quickReplies) {
+      const qrWrap = document.createElement('div');
+      qrWrap.className = 'msg bot';
+      const qrAvSpacer = document.createElement('div');
+      qrAvSpacer.style.width = '30px';
+      qrAvSpacer.style.flexShrink = '0';
+      const qrRow = document.createElement('div');
+      qrRow.className = 'quick-replies';
+      extras.quickReplies.forEach(label => {
+        const btn = document.createElement('button');
+        btn.className = 'qr-btn';
+        btn.textContent = label;
+        btn.onclick = () => {
+          // Remove quick reply row after click
+          qrWrap.remove();
+          handleUserInput(label);
+        };
+        qrRow.appendChild(btn);
+      });
+      qrWrap.appendChild(qrAvSpacer);
+      qrWrap.appendChild(qrRow);
+      messagesEl.appendChild(qrWrap);
+    }
+
+    scrollBottom();
+    return wrap;
+  }
+
+  function addTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg bot';
+    wrap.id = 'typing';
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar';
+    avatar.textContent = '🖥';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function botReply(html, extras, delay = 900) {
+    sendBtn.disabled = true;
+    userInput.disabled = true;
+    addTyping();
+    return new Promise(resolve => {
+      setTimeout(() => {
+        removeTyping();
+        addMessage('bot', html, extras);
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus();
+        resolve();
+      }, delay);
+    });
+  }
+
+  // ─── Knowledge Base ──────────────────────────────────────────────────────────
+  const GUIDES = {
+    ram_cpu_windows: `
+      <span class="badge green">Windows Guide</span>
+      <strong>How to check RAM &amp; CPU on Windows:</strong>
+      <span class="step-title">Option 1 — Task Manager</span>
+      <ul>
+        <li>Press <code>Ctrl + Shift + Esc</code> to open Task Manager.</li>
+        <li>Click the <strong>Performance</strong> tab.</li>
+        <li>Select <strong>CPU</strong> on the left to see your processor name, speed, and core count.</li>
+        <li>Select <strong>Memory</strong> to see total RAM and how much is in use.</li>
+      </ul>
+      <span class="step-title">Option 2 — System Information</span>
+      <ul>
+        <li>Press <code>Win + R</code>, type <code>msinfo32</code>, then press Enter.</li>
+        <li>Under <em>System Summary</em> you'll find <strong>Processor</strong> (CPU) and <strong>Installed Physical Memory (RAM)</strong>.</li>
+      </ul>`,
+
+    ram_cpu_mac: `
+      <span class="badge green">macOS Guide</span>
+      <strong>How to check RAM &amp; CPU on macOS:</strong>
+      <ul>
+        <li>Click the  <strong>Apple menu</strong> → <strong>About This Mac</strong>.</li>
+        <li>The overview panel shows your <strong>Processor</strong> (CPU) and <strong>Memory</strong> (RAM) at a glance.</li>
+      </ul>
+      <span class="step-title">For more detail:</span>
+      <ul>
+        <li>Open <strong>Activity Monitor</strong> (search in Spotlight with <code>Cmd + Space</code>).</li>
+        <li>Click the <strong>CPU</strong> tab for per-core usage, and the <strong>Memory</strong> tab for RAM usage breakdown.</li>
+      </ul>`,
+
+    ram_cpu_linux: `
+      <span class="badge green">Linux Guide</span>
+      <strong>How to check RAM &amp; CPU on Linux:</strong>
+      <span class="step-title">CPU:</span>
+      <ul>
+        <li>Open a terminal and run: <code>lscpu</code></li>
+        <li>This shows your CPU model, cores, threads, and speed.</li>
+      </ul>
+      <span class="step-title">RAM:</span>
+      <ul>
+        <li>Run: <code>free -h</code> to see total, used, and available memory in human-readable format.</li>
+        <li>Or run: <code>cat /proc/meminfo</code> for detailed memory info.</li>
+      </ul>`,
+
+    ssd_windows: `
+      <span class="badge green">Windows Guide</span>
+      <strong>How to check SSD / storage space on Windows:</strong>
+      <span class="step-title">Option 1 — File Explorer</span>
+      <ul>
+        <li>Open <strong>File Explorer</strong> (<code>Win + E</code>).</li>
+        <li>Click <strong>This PC</strong> in the left sidebar.</li>
+        <li>You'll see each drive with a bar showing used and free space.</li>
+      </ul>
+      <span class="step-title">Option 2 — Settings</span>
+      <ul>
+        <li>Go to <strong>Settings → System → Storage</strong>.</li>
+        <li>This shows total capacity and a breakdown of what's using space.</li>
+      </ul>
+      <span class="step-title">Option 3 — Disk Management</span>
+      <ul>
+        <li>Press <code>Win + R</code>, type <code>diskmgmt.msc</code>, then Enter.</li>
+        <li>Each disk partition's size and free space are listed here.</li>
+      </ul>`,
+
+    ssd_mac: `
+      <span class="badge green">macOS Guide</span>
+      <strong>How to check SSD / storage space on macOS:</strong>
+      <ul>
+        <li>Click the  <strong>Apple menu</strong> → <strong>About This Mac</strong> → <strong>Storage</strong> tab.</li>
+        <li>You'll see a visual bar showing used space by category and total capacity.</li>
+      </ul>
+      <span class="step-title">For more detail:</span>
+      <ul>
+        <li>Open <strong>Finder</strong>, right-click your drive under <em>Locations</em> and choose <strong>Get Info</strong>.</li>
+        <li>It shows exact capacity, available space, and used space.</li>
+      </ul>`,
+
+    ssd_linux: `
+      <span class="badge green">Linux Guide</span>
+      <strong>How to check SSD / storage space on Linux:</strong>
+      <ul>
+        <li>Open a terminal and run: <code>df -h</code></li>
+        <li>This lists all mounted filesystems with total size, used, and available space.</li>
+        <li>Look for your root partition (usually <code>/</code>) or any other mounted drives.</li>
+      </ul>
+      <span class="step-title">For block device detail:</span>
+      <ul>
+        <li>Run: <code>lsblk</code> to see all drives and partitions and their sizes.</li>
+      </ul>`,
+
+    gpu_windows: `
+      <span class="badge green">Windows Guide</span>
+      <strong>How to check your GPU (Graphics Card) on Windows:</strong>
+      <span class="step-title">Option 1 — Device Manager</span>
+      <ul>
+        <li>Press <code>Win + X</code> and choose <strong>Device Manager</strong>.</li>
+        <li>Expand <strong>Display adapters</strong> — your GPU name will be listed here.</li>
+      </ul>
+      <span class="step-title">Option 2 — Task Manager</span>
+      <ul>
+        <li>Press <code>Ctrl + Shift + Esc</code> → <strong>Performance</strong> tab.</li>
+        <li>Select <strong>GPU</strong> from the left panel to see the GPU name, VRAM, and usage.</li>
+      </ul>
+      <span class="step-title">Option 3 — DirectX Diagnostic</span>
+      <ul>
+        <li>Press <code>Win + R</code>, type <code>dxdiag</code>, then Enter.</li>
+        <li>Click the <strong>Display</strong> tab — it shows full GPU name, manufacturer, memory, and driver version.</li>
+      </ul>`,
+
+    gpu_mac: `
+      <span class="badge green">macOS Guide</span>
+      <strong>How to check your GPU on macOS:</strong>
+      <ul>
+        <li>Click the  <strong>Apple menu</strong> → <strong>About This Mac</strong>.</li>
+        <li>You'll see your GPU listed under <strong>Graphics</strong>.</li>
+      </ul>
+      <span class="step-title">For more detail:</span>
+      <ul>
+        <li>Go to <strong>Apple menu → About This Mac → System Report…</strong></li>
+        <li>Under <strong>Hardware</strong>, click <strong>Graphics/Displays</strong> to see full GPU info including VRAM.</li>
+      </ul>`,
+
+    gpu_linux: `
+      <span class="badge green">Linux Guide</span>
+      <strong>How to check your GPU on Linux:</strong>
+      <ul>
+        <li>Open a terminal and run: <code>lspci | grep -i vga</code></li>
+        <li>This lists your graphics adapter.</li>
+      </ul>
+      <span class="step-title">For NVIDIA GPUs:</span>
+      <ul>
+        <li>Run: <code>nvidia-smi</code> for GPU name, VRAM, temperature, and driver version.</li>
+      </ul>
+      <span class="step-title">For AMD GPUs:</span>
+      <ul>
+        <li>Run: <code>radeontop</code> or check <code>/sys/class/drm/</code> for device info.</li>
+      </ul>`,
+  };
+
+  // ─── Component Knowledge Base (explain what each part is) ────────────────────
+  const COMPONENTS = {
+    motherboard: {
+      name: 'Motherboard (Papan Induk)',
+      icon: '🖥️',
+      what: 'The main circuit board that connects all components — CPU, RAM, GPU, storage, and ports are all plugged into it.',
+      types: ['ATX (standard desktop)', 'Micro-ATX (smaller desktop)', 'Mini-ITX (compact/HTPC)', 'ITX (ultra-compact)', 'E-ATX (high-end workstation/server)'],
+      brands: ['ASUS', 'MSI', 'Gigabyte', 'ASRock', 'EVGA', 'Supermicro'],
+      check_windows: 'Press <code>Win + R</code> → type <code>msinfo32</code> → look for <strong>BaseBoard Manufacturer</strong> and <strong>BaseBoard Product</strong>.',
+      check_mac: 'Apple menu → About This Mac → System Report → Hardware Overview.',
+      check_linux: 'Run: <code>sudo dmidecode -t baseboard</code>',
+    },
+
+    cpu: {
+      name: 'CPU (Processor / Pemproses)',
+      icon: '⚙️',
+      what: 'The "brain" of the computer. It processes all instructions and calculations. Speed is measured in GHz; more cores = better multitasking.',
+      types: ['Intel Core i3/i5/i7/i9', 'AMD Ryzen 3/5/7/9', 'Intel Xeon (server/workstation)', 'AMD Threadripper (HEDT)', 'Apple M1/M2/M3/M4 (Mac)', 'Qualcomm Snapdragon X (ARM laptops)'],
+      brands: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
+      check_windows: 'Press <code>Ctrl + Shift + Esc</code> → Performance tab → CPU. Or <code>Win + R</code> → <code>msinfo32</code>.',
+      check_mac: 'Apple menu → About This Mac → shows Chip or Processor.',
+      check_linux: 'Run: <code>lscpu</code> or <code>cat /proc/cpuinfo | grep "model name"</code>',
+    },
+
+    ram: {
+      name: 'RAM (Random Access Memory)',
+      icon: '🧠',
+      what: 'Temporary memory that stores data the CPU is actively using. More RAM = smoother multitasking. Measured in GB; speed in MHz/MT/s.',
+      types: ['DDR4 (most common, 2015–present)', 'DDR5 (latest, 2021–present)', 'LPDDR4/LPDDR5 (laptops, low-power)', 'SO-DIMM (laptop form factor)', 'DIMM (desktop form factor)', 'ECC RAM (servers, error-correcting)'],
+      brands: ['Kingston', 'Corsair', 'G.Skill', 'Crucial', 'Samsung', 'SK Hynix', 'Micron'],
+      check_windows: 'Press <code>Ctrl + Shift + Esc</code> → Performance → Memory. Shows total, speed, and slots used.',
+      check_mac: 'Apple menu → About This Mac → Memory.',
+      check_linux: 'Run: <code>free -h</code> or <code>sudo dmidecode -t memory</code> for slot/speed info.',
+    },
+
+    gpu: {
+      name: 'GPU (Graphics Card / Kad Grafik)',
+      icon: '🎮',
+      what: 'Handles all visual rendering — games, video, 3D work, and AI tasks. Has its own memory called VRAM. Can be dedicated (separate card) or integrated (built into CPU).',
+      types: ['Discrete/Dedicated GPU (separate card)', 'Integrated GPU (built into CPU — Intel UHD, AMD Radeon Graphics, Apple GPU)', 'NVIDIA GeForce (gaming)', 'NVIDIA Quadro/RTX Pro (professional)', 'AMD Radeon RX (gaming)', 'AMD Radeon Pro (professional)', 'Intel Arc (gaming, newer)'],
+      brands: ['NVIDIA', 'AMD', 'Intel', 'Apple (integrated)'],
+      check_windows: 'Press <code>Win + X</code> → Device Manager → Display adapters. Or <code>Win + R</code> → <code>dxdiag</code> → Display tab.',
+      check_mac: 'Apple menu → About This Mac → shows GPU under Graphics.',
+      check_linux: 'Run: <code>lspci | grep -i vga</code> or <code>nvidia-smi</code> for NVIDIA.',
+    },
+
+    storage: {
+      name: 'Storage (Storan) — SSD / HDD / NVMe',
+      icon: '💾',
+      what: 'Where your OS, files, and programs are permanently stored. SSDs are fast (solid state), HDDs are slower but cheaper per GB.',
+      types: ['NVMe SSD (M.2, fastest — PCIe 4.0/5.0)', 'SATA SSD (2.5", fast, common)', 'HDD (3.5" or 2.5", mechanical, slower)', 'eMMC (budget laptops, soldered)', 'UFS (high-end smartphones/tablets)', 'M.2 2280 / 2242 / 2230 (form factors)', 'External USB SSD/HDD'],
+      brands: ['Samsung (870 EVO, 990 Pro)', 'WD (Western Digital)', 'Seagate', 'Crucial', 'Kingston', 'SK Hynix', 'Sabrent', 'Toshiba'],
+      check_windows: 'Open File Explorer → This PC. Or <code>Win + R</code> → <code>diskmgmt.msc</code>. Or Settings → System → Storage.',
+      check_mac: 'Apple menu → About This Mac → Storage tab.',
+      check_linux: 'Run: <code>df -h</code> for usage, <code>lsblk</code> for drives.',
+    },
+
+    psu: {
+      name: 'PSU (Power Supply Unit / Bekalan Kuasa)',
+      icon: '🔌',
+      what: 'Converts AC power from the wall into DC power for components. Wattage and efficiency rating (80+ Bronze/Gold/Platinum) matter a lot for stability and electricity bills.',
+      types: ['ATX PSU (standard desktop)', 'SFX PSU (small form factor)', 'Modular (cables removable)', 'Semi-modular', 'Non-modular', '80+ White / Bronze / Silver / Gold / Platinum / Titanium ratings'],
+      brands: ['Corsair', 'Seasonic', 'be quiet!', 'EVGA', 'Thermaltake', 'Cooler Master', 'FSP', 'Super Flower'],
+      check_windows: 'PSU details aren\'t readable via software. Check the label on the PSU unit itself or your purchase receipt.',
+      check_mac: 'Mac\'s PSU is internal and not user-serviceable.',
+      check_linux: 'Same as Windows — check physically or use <code>sudo dmidecode -t 39</code> on some systems.',
+    },
+
+    cooling: {
+      name: 'Cooling System (Sistem Penyejukan)',
+      icon: '❄️',
+      what: 'Keeps CPU and GPU temperatures in check. Overheating causes throttling (slowdown) or shutdowns. Options include air coolers (heatsink + fan) and liquid coolers (AIO or custom loop).',
+      types: ['Stock cooler (bundled with CPU)', 'Air cooler — tower heatsink (e.g. Noctua NH-D15)', 'AIO liquid cooler (240mm / 360mm)', 'Custom water loop', 'Laptop thermal paste + heat pipe', 'Thermal paste (application between CPU and cooler)'],
+      brands: ['Noctua', 'be quiet!', 'Cooler Master', 'NZXT', 'Corsair', 'Arctic', 'DeepCool', 'Thermalright'],
+      check_windows: 'Check CPU temp: download <strong>HWiNFO64</strong> or <strong>Core Temp</strong>. Or <code>Win + R</code> → <code>msinfo32</code> for cooler info.',
+      check_mac: 'Apple menu → About This Mac → System Report → Power → CPU Proximity Temperature.',
+      check_linux: 'Run: <code>sensors</code> (install: <code>sudo apt install lm-sensors</code>) or <code>cat /sys/class/thermal/thermal_zone*/temp</code>.',
+    },
+
+    monitor: {
+      name: 'Monitor / Display (Skrin)',
+      icon: '🖥',
+      what: 'The screen that displays output from your GPU. Key specs: resolution, refresh rate (Hz), panel type, and response time.',
+      types: ['IPS (accurate colours, good viewing angles)', 'VA (high contrast, deeper blacks)', 'TN (fastest response, older tech)', 'OLED (perfect blacks, vivid colours)', '1080p / 1440p / 4K / 8K resolutions', '60Hz / 144Hz / 165Hz / 240Hz / 360Hz refresh rates', 'Ultrawide (21:9) / Super Ultrawide (32:9)'],
+      brands: ['LG', 'Samsung', 'Dell', 'ASUS ROG/TUF', 'BenQ', 'Acer', 'AOC', 'MSI', 'Alienware'],
+      check_windows: 'Right-click desktop → Display settings → shows resolution & refresh rate. For model: <code>Win + R</code> → <code>dxdiag</code> → Display tab.',
+      check_mac: 'Apple menu → System Preferences → Displays.',
+      check_linux: 'Run: <code>xrandr</code> or <code>inxi -G</code>.',
+    },
+
+    network: {
+      name: 'Network Adapter (WiFi / LAN / Ethernet)',
+      icon: '🌐',
+      what: 'Connects your PC to the internet or local network. Can be wired (Ethernet/LAN) or wireless (WiFi). Laptops usually have both built in.',
+      types: ['Ethernet (Wired LAN) — 1Gbps / 2.5Gbps / 10Gbps', 'WiFi 5 (802.11ac)', 'WiFi 6 (802.11ax)', 'WiFi 6E (6 GHz band)', 'WiFi 7 (802.11be, latest)', 'Bluetooth 5.0 / 5.2 / 5.3', 'PCIe WiFi card (desktop add-on)'],
+      brands: ['Intel (Killer, AX series)', 'Realtek', 'Broadcom', 'MediaTek', 'Qualcomm Atheros', 'TP-Link (PCIe cards)'],
+      check_windows: 'Press <code>Win + R</code> → <code>ncpa.cpl</code> → shows all network adapters. Or Device Manager → Network Adapters.',
+      check_mac: 'Apple menu → About This Mac → System Report → Network.',
+      check_linux: 'Run: <code>ip link</code> or <code>iwconfig</code> for WiFi, <code>lspci | grep -i net</code> for hardware.',
+    },
+
+    battery: {
+      name: 'Battery (Bateri) — Laptop sahaja',
+      icon: '🔋',
+      what: 'Powers the laptop when unplugged. Measured in Wh (watt-hours) or mAh. Health degrades over charge cycles — a healthy battery should retain 80%+ capacity after 300–500 cycles.',
+      types: ['Lithium-Ion (Li-Ion) — most common', 'Lithium-Polymer (Li-Po) — lighter, used in slim laptops', '2-cell / 3-cell / 4-cell / 6-cell configurations', '40Wh / 56Wh / 72Wh / 99.9Wh (airline limit) capacities'],
+      brands: ['Built-in by laptop manufacturer (Dell, HP, Lenovo, ASUS, Acer, Apple)'],
+      check_windows: 'Open Terminal → run: <code>powercfg /batteryreport</code> → open the generated HTML file. Shows design capacity vs. current capacity.',
+      check_mac: 'Hold <strong>Option</strong> + click battery icon in menu bar → show condition. Or About This Mac → System Report → Power.',
+      check_linux: 'Run: <code>upower -i /org/freedesktop/UPower/devices/battery_BAT0</code> or <code>cat /sys/class/power_supply/BAT0/capacity</code>.',
+    },
+
+    keyboard: {
+      name: 'Keyboard (Papan Kekunci)',
+      icon: '⌨️',
+      what: 'Input device for typing. Comes in membrane (soft press), mechanical (clicky/tactile), or scissor-switch (thin, laptop-style) variants.',
+      types: ['Membrane keyboard (budget, quiet)', 'Mechanical keyboard (Cherry MX, Gateron, Kailh switches)', 'Scissor-switch (most laptops)', 'Optical keyboard (light-based actuation)', 'Wireless / Bluetooth keyboard', 'Tenkeyless (TKL — no numpad)', '65% / 75% / 80% / 100% layouts'],
+      brands: ['Logitech', 'Corsair', 'Razer', 'Keychron', 'Ducky', 'HyperX', 'SteelSeries', 'ASUS ROG'],
+      check_windows: 'Device Manager → Keyboards. For detailed model: check the label under the keyboard.',
+      check_mac: 'Apple menu → System Report → USB.',
+      check_linux: 'Run: <code>xinput list</code> or <code>ls /dev/input/by-id/</code>.',
+    },
+
+    mouse: {
+      name: 'Mouse (Tetikus)',
+      icon: '🖱️',
+      what: 'Pointing device. Gaming mice focus on DPI (sensitivity), polling rate, and sensor accuracy. Office mice prioritise comfort and battery life.',
+      types: ['Optical mouse (LED sensor)', 'Laser mouse (laser sensor, works on glass)', 'Wireless mouse (2.4GHz dongle or Bluetooth)', 'Gaming mouse (high DPI, polling rate up to 8000Hz)', 'Trackball mouse', 'Vertical ergonomic mouse'],
+      brands: ['Logitech', 'Razer', 'SteelSeries', 'Zowie', 'Corsair', 'HyperX', 'Glorious', 'Endgame Gear'],
+      check_windows: 'Device Manager → Mice and other pointing devices.',
+      check_mac: 'Apple menu → System Report → USB or Bluetooth.',
+      check_linux: 'Run: <code>xinput list</code>.',
+    },
+
+    sound: {
+      name: 'Sound Card / Audio (Kad Bunyi)',
+      icon: '🔊',
+      what: 'Processes audio input and output. Most motherboards have integrated audio (Realtek). Dedicated sound cards give better quality, lower latency, and more features.',
+      types: ['Integrated audio (on motherboard — Realtek ALC series)', 'Dedicated PCIe sound card', 'USB DAC (external audio interface)', 'USB headset audio chip'],
+      brands: ['Realtek (integrated)', 'Creative (Sound Blaster)', 'ASUS Xonar', 'Focusrite', 'MOTU', 'Rode'],
+      check_windows: 'Device Manager → Sound, video and game controllers. Or right-click speaker icon → Sounds → Playback tab.',
+      check_mac: 'Apple menu → System Report → Audio.',
+      check_linux: 'Run: <code>aplay -l</code> or <code>lspci | grep -i audio</code>.',
+    },
+
+    webcam: {
+      name: 'Webcam (Kamera Web)',
+      icon: '📷',
+      what: 'Camera for video calls and streaming. Key specs: resolution (720p/1080p/4K), frame rate (30fps/60fps), and field of view (FOV).',
+      types: ['Built-in laptop webcam (720p/1080p)', 'External USB webcam', 'Mirrorless/DSLR via capture card', '4K webcam', 'AI-powered webcam (background blur, auto-framing)'],
+      brands: ['Logitech', 'Razer', 'Microsoft', 'Elgato', 'Anker'],
+      check_windows: 'Device Manager → Cameras. Or open Camera app to test.',
+      check_mac: 'Apple menu → System Report → Camera.',
+      check_linux: 'Run: <code>ls /dev/video*</code> or <code>v4l2-ctl --list-devices</code>.',
+    },
+
+    case_chassis: {
+      name: 'PC Case / Chassis (Casing PC)',
+      icon: '🗃️',
+      what: 'The enclosure that houses all PC components. Determines airflow, size of components supported, and aesthetics (RGB, tempered glass, etc.).',
+      types: ['Full Tower (large, supports E-ATX)', 'Mid Tower (most common, ATX)', 'Mini Tower / mATX', 'ITX case (tiny, compact builds)', 'HTPC case (home theatre flat design)', 'Open-frame test bench'],
+      brands: ['Fractal Design', 'Lian Li', 'NZXT', 'Corsair', 'be quiet!', 'Cooler Master', 'Phanteks', 'Antec'],
+      check_windows: 'No software tool — check physically or your purchase invoice.',
+      check_mac: 'N/A for Mac.',
+      check_linux: 'Run: <code>sudo dmidecode -t chassis</code> for chassis type info.',
+    },
+
+    optical: {
+      name: 'Optical Drive (DVD/Blu-ray)',
+      icon: '💿',
+      what: 'Reads and writes CDs, DVDs, and Blu-ray discs. Mostly absent from modern laptops and desktops — external USB drives are used instead.',
+      types: ['DVD-ROM (read only)', 'DVD±RW (read & write)', 'Blu-ray ROM', 'Blu-ray Writer', 'External USB optical drive'],
+      brands: ['LG', 'ASUS', 'Pioneer', 'Samsung', 'Verbatim'],
+      check_windows: 'Open File Explorer → This PC — optical drive appears as a drive letter (e.g. D:). Or Device Manager → DVD/CD-ROM drives.',
+      check_mac: 'Apple menu → System Report → Disc Burning.',
+      check_linux: 'Run: <code>lsblk</code> — look for <code>rom</code> type entries.',
+    },
+
+    ports: {
+      name: 'Ports & Connectivity (Port & Sambungan)',
+      icon: '🔌',
+      what: 'Physical connectors on your PC/laptop for peripherals, storage, display, and power.',
+      types: ['USB-A 3.0 / 3.1 / 3.2 (standard rectangle)', 'USB-C / Thunderbolt 3 / Thunderbolt 4 / Thunderbolt 5', 'HDMI 1.4 / 2.0 / 2.1', 'DisplayPort 1.4 / 2.0 / 2.1', 'VGA (legacy)', 'SD card reader', '3.5mm audio jack', 'RJ-45 Ethernet', 'Kensington lock slot'],
+      brands: ['Built into motherboard / laptop chassis'],
+      check_windows: 'Device Manager → Universal Serial Bus controllers. Or Settings → System → About for Thunderbolt.',
+      check_mac: 'Apple menu → System Report → USB / Thunderbolt.',
+      check_linux: 'Run: <code>lsusb</code> for USB devices, <code>lspci | grep -i thunderbolt</code>.',
+    },
+  };
+
+  // Helper — build a component info card
+  function buildComponentInfo(key) {
+    const c = COMPONENTS[key];
+    if (!c) return null;
+    const typesList = c.types.map(t => '<li>' + t + '</li>').join('');
+    const brandsList = c.brands.join(', ');
+    return `
+      <span class="badge green">${c.icon} Component Info</span>
+      <strong>${c.name}</strong><br><br>
+      <em>${c.what}</em>
+      <span class="step-title">Common Types / Variants:</span>
+      <ul>${typesList}</ul>
+      <span class="step-title">Popular Brands:</span>
+      ${brandsList}
+      <span class="step-title">How to check on your PC:</span>
+      <ul>
+        <li><strong>Windows:</strong> ${c.check_windows}</li>
+        <li><strong>macOS:</strong> ${c.check_mac}</li>
+        <li><strong>Linux:</strong> ${c.check_linux}</li>
+      </ul>`;
+  }
+
+  // ─── Intent Detection ────────────────────────────────────────────────────────
+  function detectIntent(text) {
+    const t = text.toLowerCase();
+
+    // Repair / complex troubleshooting
+    if (/\b(repair|replace|fix|solder|broke|broken|cracked|physical|hardware\s+issue|motherboard\s+fail|screen\s+broken|battery\s+swell|water\s+damage|won.t\s+turn\s+on|not\s+booting|won.t\s+boot|blue\s*screen|bsod|crash|freeze|stuck\s+on|reinstall\s+windows|format|virus|malware|driver\s+install)\b/.test(t)) {
+      return 'out_of_scope';
+    }
+
+    // Greetings
+    if (/^(hi|hello|hey|good\s+(morning|afternoon|evening)|howdy|greetings|helo|hai|selamat)[!?,.]?\s*$/.test(t.trim())) {
+      return 'greeting';
+    }
+
+    // What can you do
+    if (/what\s+can\s+you\s+do|what\s+do\s+you\s+help|help\s+me\s+with|capabilities|features|apa\s+yang|boleh\s+buat/.test(t)) {
+      return 'capabilities';
+    }
+
+    // List all components
+    if (/list\s+(all\s+)?component|all\s+component|semua\s+komponen|what\s+(are\s+)?pc\s+component|komponen\s+pc|bahagian\s+pc/.test(t)) {
+      return 'list_components';
+    }
+
+    // Motherboard
+    if (/\b(motherboard|mainboard|mobo|papan\s+induk|papan\s+mother)\b/.test(t)) return 'component_motherboard';
+
+    // CPU
+    if (/\b(cpu|processor|pemproses|core\s+i[0-9]|ryzen|xeon|m[12345]\s+chip|snapdragon\s+x)\b/.test(t)) return 'ram_cpu';
+
+    // RAM
+    if (/\b(ram|memory|memori|ddr[345]|so-?dimm|lpddr)\b/.test(t)) return 'ram_cpu';
+
+    // GPU
+    if (/\b(gpu|graphics|graphic\s+card|graphics\s+card|video\s+card|vram|display\s+adapter|rtx|gtx|radeon|geforce|intel\s+arc|kad\s+grafik)\b/.test(t)) return 'gpu';
+
+    // Storage
+    if (/\b(ssd|storage|storan|disk|drive|hard\s+drive|space|hdd|nvme|emmc|m\.2)\b/.test(t)) return 'ssd';
+
+    // PSU
+    if (/\b(psu|power\s+supply|bekalan\s+kuasa|wattage|80\+|watt\s+rating)\b/.test(t)) return 'component_psu';
+
+    // Cooling
+    if (/\b(cooling|cooler|fan|penyejukan|thermal|heatsink|aio|liquid\s+cool|heat\s+pipe|cpu\s+temp|temperature)\b/.test(t)) return 'component_cooling';
+
+    // Monitor / Display
+    if (/\b(monitor|display|screen|skrin|refresh\s+rate|resolution|hz|4k|1080p|1440p|oled|ips|va|panel)\b/.test(t)) return 'component_monitor';
+
+    // Network
+    if (/\b(wifi|wi-fi|wireless|ethernet|lan|network|rangkaian|adapter|bluetooth|internet\s+card)\b/.test(t)) return 'component_network';
+
+    // Battery
+    if (/\b(battery|bateri|batt|charge\s+cycle|mah|watt.?hour|battery\s+health|battery\s+report)\b/.test(t)) return 'component_battery';
+
+    // Keyboard
+    if (/\b(keyboard|papan\s+kekunci|mechanical|membrane|switch|keycap|tenkeyless|tkl)\b/.test(t)) return 'component_keyboard';
+
+    // Mouse
+    if (/\b(mouse|tetikus|dpi|polling\s+rate|optical\s+mouse|gaming\s+mouse|trackball)\b/.test(t)) return 'component_mouse';
+
+    // Sound
+    if (/\b(sound\s+card|audio|speaker|headphone|microphone|dac|realtek|bunyi|kad\s+bunyi)\b/.test(t)) return 'component_sound';
+
+    // Webcam
+    if (/\b(webcam|camera|kamera|web\s+cam|video\s+call|streaming\s+cam)\b/.test(t)) return 'component_webcam';
+
+    // Case
+    if (/\b(case|casing|chassis|tower|mid\s+tower|mini\s+itx|atx\s+case)\b/.test(t)) return 'component_case_chassis';
+
+    // Optical
+    if (/\b(optical|dvd|blu.?ray|cd\s+drive|disc\s+drive|dvd\s+writer)\b/.test(t)) return 'component_optical';
+
+    // Ports
+    if (/\b(port|usb|thunderbolt|hdmi|displayport|usb.c|connectivity|sambungan)\b/.test(t)) return 'component_ports';
+
+    return 'unknown';
+  }
+
+  function detectOS(text) {
+    const t = text.toLowerCase();
+    if (/\b(windows|win\s*10|win\s*11|laptop|pc)\b/.test(t)) return 'windows';
+    if (/\b(mac|macos|macbook|apple|osx|os\s*x)\b/.test(t)) return 'mac';
+    if (/\b(linux|ubuntu|debian|fedora|arch|mint|pop!?\s*os|terminal)\b/.test(t)) return 'linux';
+    return null;
+  }
+
+  function getGuide(component, os) {
+    return GUIDES[`${component}_${os}`] || null;
+  }
+
+  // ─── Response Logic ───────────────────────────────────────────────────────────
+  async function handleUserInput(text) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    addMessage('user', escapeHtml(trimmed));
+
+    // ── Resolve pending OS question ──────────────────────────────────────────
+    if (pendingComponent) {
+      const os = detectOS(trimmed);
+      if (os) {
+        const comp = pendingComponent;
+        pendingComponent = null;
+        failedAttempts = 0;
+        const guide = getGuide(comp, os);
+        await botReply(guide);
+        return;
+      } else {
+        // Still couldn't determine OS
+        pendingComponent = null;
+        failedAttempts++;
+        if (failedAttempts >= 2) {
+          await botReply(humanHandoff());
+          return;
+        }
+        await botReply(
+          `Sorry, I didn't catch which operating system you're using. Could you specify <strong>Windows</strong>, <strong>macOS</strong>, or <strong>Linux</strong>?`,
+          { quickReplies: ['Windows', 'macOS', 'Linux'] }
+        );
+        return;
+      }
+    }
+
+    const intent = detectIntent(trimmed);
+    const os = detectOS(trimmed);
+
+    // ── Out of scope ─────────────────────────────────────────────────────────
+    if (intent === 'out_of_scope') {
+      failedAttempts = 0;
+      await botReply(`
+        <span class="badge red">Out of Scope</span>
+        That sounds like it may involve physical hardware repair or complex system troubleshooting — which is outside what I can help with.<br><br>
+        I'll connect you with a <strong>human technician</strong> who can assist you properly. Please hold on or visit your nearest service centre. 🛠️
+      `);
+      return;
+    }
+
+    // ── Greeting ─────────────────────────────────────────────────────────────
+    if (intent === 'greeting') {
+      failedAttempts = 0;
+      await botReply(
+        `👋 Hello! I'm the <strong>PC Info &amp; Tech Assistant Bot</strong>.<br>I can help you check your PC's specs — RAM, CPU, SSD storage, and GPU — on Windows, macOS, or Linux.<br><br>What would you like to know?`,
+        { quickReplies: ['Check RAM & CPU', 'Check SSD Storage', 'Check GPU', 'What can you do?'] }
+      );
+      return;
+    }
+
+    // ── Capabilities ─────────────────────────────────────────────────────────
+    if (intent === 'capabilities') {
+      failedAttempts = 0;
+      await botReply(`
+        Here's what I can help you with:
+        <ul>
+          <li>🔍 How to check your <strong>RAM &amp; CPU</strong></li>
+          <li>💾 How to check your <strong>SSD / Storage space</strong></li>
+          <li>🎮 How to check your <strong>GPU / Graphics Card</strong></li>
+        </ul>
+        I support <strong>Windows</strong>, <strong>macOS</strong>, and <strong>Linux</strong>.<br><br>
+        <em>Note: I don't handle physical repairs or complex troubleshooting — I'll hand those off to a human technician.</em>
+      `, { quickReplies: ['Check RAM & CPU', 'Check SSD Storage', 'Check GPU'] });
+      return;
+    }
+
+    // ── List all components ──────────────────────────────────────────────────
+    if (intent === 'list_components') {
+      failedAttempts = 0;
+      const items = Object.values(COMPONENTS).map(c => '<li>' + c.icon + ' <strong>' + c.name + '</strong> — ' + c.what.split('.')[0] + '.</li>').join('');
+      await botReply(
+        '<span class="badge green">📋 PC Components</span>'
+        + 'Here are all the PC/laptop components I know about:<ul>' + items + '</ul>'
+        + 'Ask me about any one of them for more details!',
+        { quickReplies: ['CPU', 'RAM', 'GPU', 'Motherboard', 'Battery', 'PSU', 'Cooling', 'Ports'] }
+      );
+      return;
+    }
+
+    // ── Known guide component (RAM/CPU/SSD/GPU — has per-OS guides) ──────────
+    if (intent === 'ram_cpu' || intent === 'ssd' || intent === 'gpu') {
+      failedAttempts = 0;
+      if (os) {
+        const guide = getGuide(intent, os);
+        if (guide) {
+          await botReply(guide);
+        }
+      } else {
+        pendingComponent = intent;
+        const compName = intent === 'ram_cpu' ? 'RAM &amp; CPU' : intent === 'ssd' ? 'SSD storage' : 'GPU';
+        await botReply(
+          `Sure, I can guide you on checking your <strong>${compName}</strong>! Which operating system are you using?`,
+          { quickReplies: ['Windows', 'macOS', 'Linux'] }
+        );
+      }
+      return;
+    }
+
+    // ── Component info (no OS-specific guide needed) ─────────────────────────
+    if (intent.startsWith('component_')) {
+      failedAttempts = 0;
+      const key = intent.replace('component_', '');
+      const card = buildComponentInfo(key);
+      if (card) {
+        await botReply(card, { quickReplies: ['List all components', 'Check RAM & CPU', 'Check SSD Storage', 'Check GPU'] });
+      }
+      return;
+    }
+
+    // ── Unknown ───────────────────────────────────────────────────────────────
+    failedAttempts++;
+    if (failedAttempts >= 2) {
+      await botReply(humanHandoff());
+      failedAttempts = 0;
+    } else {
+      await botReply(`
+        I'm sorry, I didn't quite understand that. 🤔<br><br>
+        I can help you check PC specs and explain components like <strong>CPU, RAM, GPU, SSD, Motherboard, PSU, Cooling, Battery</strong>, and more. Try asking about a specific component, or:
+      `, { quickReplies: ['List all components', 'Check RAM & CPU', 'Check GPU', 'What can you do?'] });
+    }
+  }
+
+  function humanHandoff() {
+    return `
+      <span class="badge red">Connecting to Human</span>
+      I'm sorry I wasn't able to help with that after a couple of tries. 😔<br><br>
+      I'll connect you to a <strong>human technician</strong> who will be better equipped to assist you. Please stand by — someone will be with you shortly. 👨‍💻
+    `;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ─── Event Listeners ─────────────────────────────────────────────────────────
+  sendBtn.addEventListener('click', () => {
+    const val = userInput.value.trim();
+    if (!val) return;
+    userInput.value = '';
+    handleUserInput(val);
+  });
+
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = userInput.value.trim();
+      if (!val) return;
+      userInput.value = '';
+      handleUserInput(val);
+    }
+  });
+
+  // ─── Welcome message ──────────────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    botReply(
+      `👋 Hi there! I'm your <strong>PC Info &amp; Tech Assistant Bot</strong>.<br><br>
+      I know about <strong>16 PC/laptop components</strong> — CPU, RAM, GPU, SSD, Motherboard, PSU, Cooling, Monitor, WiFi, Battery, Keyboard, Mouse, Audio, Webcam, Case, Ports, and more.<br><br>
+      💡 <strong>Tip:</strong> Click <strong>"Scan My PC Specs"</strong> above to automatically detect your specs (requires the local server to be running).<br><br>
+      What would you like to know?`,
+      { quickReplies: ['List all components', 'Check RAM & CPU', 'Check GPU', 'What can you do?'] },
+      600
+    );
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "pc-info-bot",
+  "version": "1.0.0",
+  "description": "PC Info & Tech Assistant Bot with local spec reader",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
